@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Robot Adventure</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: #000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        #game-container {
+            position: relative;
+            width: 800px;
+            height: 600px;
+            border: 2px solid white;
+        }
+        #background {
+            width: 100%;
+            height: 100%;
+            cursor: crosshair;
+        }
+        #robot {
+            position: absolute;
+            width: 96px;
+            height: 128px;
+            transition: left 1s ease, top 1s ease;
+        }
+    </style>
+</head>
+<body>
+    <div id="game-container">
+        <img id="background" src="laboratory.png" alt="Laboratory">
+        <img id="robot" src="kenney_toon-characters-1/Robot/PNG/Poses/character_robot_idle.png" alt="Robot">
+    </div>
+    
+    <canvas id="obstructionCanvas" style="display: none;"></canvas>
+    
+    <script>
+        const robot = document.getElementById('robot');
+        const background = document.getElementById('background');
+        const obstructionCanvas = document.getElementById('obstructionCanvas');
+        const ctx = obstructionCanvas.getContext('2d');
+        
+        // Load obstruction image
+        const obstructionImg = new Image();
+        // Set crossOrigin to anonymous to avoid security issues
+        obstructionImg.crossOrigin = 'anonymous';
+        obstructionImg.src = 'laboratory_obstructions.png';
+        
+        // Set canvas size to match background
+        obstructionCanvas.width = 800;
+        obstructionCanvas.height = 600;
+        
+        // Draw obstruction image to canvas once loaded
+        obstructionImg.onload = function() {
+            try {
+                ctx.drawImage(obstructionImg, 0, 0, 800, 600);
+            } catch (e) {
+                console.error('Error drawing image:', e);
+            }
+        };
+        
+        // Handle image load error
+        obstructionImg.onerror = function() {
+            console.error('Failed to load obstruction image');
+        };
+        
+        // Set initial position
+        robot.style.left = '200px';
+        robot.style.top = '200px';
+        
+        // Handle click events
+        background.addEventListener('click', (e) => {
+            const rect = background.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            
+            // Check if clicked position is green (0,255,0) in obstruction image
+            const pixel = ctx.getImageData(x, y, 1, 1).data;
+            const isGreen = pixel[0] === 0 && pixel[1] === 255 && pixel[2] === 0;
+            
+            if (!isGreen) {
+                // Get current robot position
+                const currentLeft = parseInt(robot.style.left);
+                const currentCenter = currentLeft + 48;
+                
+                // Flip robot based on direction
+                if (x < currentCenter) {
+                    robot.style.transform = 'scaleX(-1)';
+                } else {
+                    robot.style.transform = 'scaleX(1)';
+                }
+                
+                // Move robot to clicked position
+                robot.style.left = `${x - 48}px`; // Center robot on click
+                robot.style.top = `${y - 64}px`; // Center robot on click
+                
+                // Animate walking
+                animateWalking();
+            }
+        });
+        
+        function animateWalking() {
+            const walkFrames = [
+                'kenney_toon-characters-1/Robot/PNG/Poses/character_robot_walk0.png',
+                'kenney_toon-characters-1/Robot/PNG/Poses/character_robot_walk1.png',
+                'kenney_toon-characters-1/Robot/PNG/Poses/character_robot_walk2.png',
+                'kenney_toon-characters-1/Robot/PNG/Poses/character_robot_walk3.png',
+                'kenney_toon-characters-1/Robot/PNG/Poses/character_robot_walk4.png',
+                'kenney_toon-characters-1/Robot/PNG/Poses/character_robot_walk5.png',
+                'kenney_toon-characters-1/Robot/PNG/Poses/character_robot_walk6.png',
+                'kenney_toon-characters-1/Robot/PNG/Poses/character_robot_walk7.png'
+            ];
+            
+            let frameIndex = 0;
+            const interval = setInterval(() => {
+                robot.src = walkFrames[frameIndex];
+                frameIndex = (frameIndex + 1) % walkFrames.length;
+            }, 100);
+            
+            // Stop animation after 1 second
+            setTimeout(() => {
+                clearInterval(interval);
+                robot.src = 'kenney_toon-characters-1/Robot/PNG/Poses/character_robot_idle.png';
+            }, 1000);
+        }
+    </script>
+</body>
+</html>
