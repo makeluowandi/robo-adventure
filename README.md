@@ -1,0 +1,1 @@
+simple try to upload an html app based on a static website
